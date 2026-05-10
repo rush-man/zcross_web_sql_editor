@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_FUGR" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <AREAT>Web-style HANA SQL editor popup</AREAT>
+   <INCLUDES>
+    <SOBJ_NAME>LZCROSS_WEB_SQL_EDITORI01</SOBJ_NAME>
+    <SOBJ_NAME>LZCROSS_WEB_SQL_EDITORO01</SOBJ_NAME>
+    <SOBJ_NAME>LZCROSS_WEB_SQL_EDITORTOP</SOBJ_NAME>
+    <SOBJ_NAME>SAPLZCROSS_WEB_SQL_EDITOR</SOBJ_NAME>
+   </INCLUDES>
+   <FUNCTIONS>
+    <item>
+     <FUNCNAME>ZCROSS_WEB_SQL_EDITOR_SHOW</FUNCNAME>
+     <SHORT_TEXT>Open the web-style HANA SQL editor popup</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IV_WIDTH</PARAMETER>
+       <DEFAULT>150</DEFAULT>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>I</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_HEIGHT</PARAMETER>
+       <DEFAULT>30</DEFAULT>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>I</TYP>
+      </RSIMP>
+     </IMPORT>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IV_WIDTH</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Popup width in dynpro character columns</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_HEIGHT</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Popup height in dynpro character rows</STEXT>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+   </FUNCTIONS>
+   <DYNPROS>
+    <item>
+     <HEADER>
+      <PROGRAM>SAPLZCROSS_WEB_SQL_EDITOR</PROGRAM>
+      <SCREEN>0100</SCREEN>
+      <LANGUAGE>E</LANGUAGE>
+      <DESCRIPT>Web-style HANA SQL editor</DESCRIPT>
+      <TYPE>M</TYPE>
+      <NEXTSCREEN>0100</NEXTSCREEN>
+      <LINES>030</LINES>
+      <COLUMNS>150</COLUMNS>
+     </HEADER>
+     <CONTAINERS>
+      <RPY_DYCATT>
+       <TYPE>SCREEN</TYPE>
+       <NAME>SCREEN</NAME>
+      </RPY_DYCATT>
+      <RPY_DYCATT>
+       <TYPE>CUST_CTRL</TYPE>
+       <NAME>CC_HTML</NAME>
+       <ELEMENT_OF>SCREEN</ELEMENT_OF>
+       <LINE>001</LINE>
+       <COLUMN>001</COLUMN>
+       <LENGTH>150</LENGTH>
+       <HEIGHT>030</HEIGHT>
+       <C_RESIZE_V>X</C_RESIZE_V>
+       <C_RESIZE_H>X</C_RESIZE_H>
+       <C_LINE_MIN>010</C_LINE_MIN>
+       <C_COLN_MIN>040</C_COLN_MIN>
+      </RPY_DYCATT>
+     </CONTAINERS>
+     <FIELDS>
+      <RPY_DYFATC>
+       <CONT_TYPE>SCREEN</CONT_TYPE>
+       <CONT_NAME>SCREEN</CONT_NAME>
+       <TYPE>OKCODE</TYPE>
+       <TEXT>____________________</TEXT>
+       <LENGTH>020</LENGTH>
+       <VISLENGTH>020</VISLENGTH>
+       <HEIGHT>001</HEIGHT>
+       <FORMAT>CHAR</FORMAT>
+       <INPUT_FLD>X</INPUT_FLD>
+      </RPY_DYFATC>
+     </FIELDS>
+    </item>
+   </DYNPROS>
+  </asx:values>
+ </asx:abap>
+</abapGit>

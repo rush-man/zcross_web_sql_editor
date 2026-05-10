@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <VSEOCLASS>
+    <CLSNAME>ZCL_CROSS_WEB_SQL_EDITOR</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>Web-style HANA SQL editor popup</DESCRIPT>
+    <STATE>1</STATE>
+    <CLSCCINCL>X</CLSCCINCL>
+    <FIXPT>X</FIXPT>
+    <UNICODE>X</UNICODE>
+   </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CMPNAME>SHOW</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Open the editor; returns confirmed flag and (possibly edited) SQL</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CMPNAME>ON_PBO</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Dynpro 0100 PBO hook</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CMPNAME>ON_PAI</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Dynpro 0100 PAI hook</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CMPNAME>MC_MODE_EDIT</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Mode constant: edit (textarea is editable)</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CMPNAME>MC_MODE_DISPLAY</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Mode constant: display (read-only)</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
+   <DESCRIPTIONS_SUB>
+    <SEOSUBCOTX>
+     <CMPNAME>SHOW</CMPNAME>
+     <SCONAME>IV_SQL</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>SQL string to seed the editor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SHOW</CMPNAME>
+     <SCONAME>IV_MODE</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Mode: 'E' edit, 'D' display</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SHOW</CMPNAME>
+     <SCONAME>IV_TITLE</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Window title shown in the page header</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SHOW</CMPNAME>
+     <SCONAME>IV_WIDTH</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Popup width in dynpro character columns</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SHOW</CMPNAME>
+     <SCONAME>IV_HEIGHT</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Popup height in dynpro character rows</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SHOW</CMPNAME>
+     <SCONAME>RS_RESULT</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Result: confirmed flag + possibly edited SQL</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>ON_PAI</CMPNAME>
+     <SCONAME>IV_OKCODE</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Dynpro OK code</DESCRIPT>
+    </SEOSUBCOTX>
+   </DESCRIPTIONS_SUB>
+  </asx:values>
+ </asx:abap>
+</abapGit>
