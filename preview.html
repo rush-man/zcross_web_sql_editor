@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SQL Editor — preview</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%; margin: 0; padding: 0; overflow: hidden;
+    font-family: Consolas, "Courier New", monospace;
+    background: #1e1e1e; color: #d4d4d4;
+  }
+  #toolbar {
+    height: 38px; background: #2d2d30;
+    border-bottom: 1px solid #3e3e42;
+    display: flex; align-items: center;
+    padding: 0 10px; gap: 8px;
+  }
+  #title  { flex: 1; font-size: 13px; color: #cccccc; font-weight: bold; }
+  #badge  {
+    font-size: 10px; color: #d4d4d4; background: #5a3a00;
+    padding: 2px 6px; border-radius: 2px; margin-right: 8px;
+  }
+  #meta   { font-size: 11px; color: #888; margin-right: 12px; }
+  .btn {
+    background: #0e639c; color: #ffffff; border: 0;
+    padding: 6px 16px; font-size: 12px; font-family: inherit;
+    cursor: pointer; border-radius: 2px;
+  }
+  .btn:hover         { background: #1177bb; }
+  .btn.cancel        { background: #3c3c3c; }
+  .btn.cancel:hover  { background: #505050; }
+  .btn.mode {
+    background: #3c3c3c; padding: 4px 10px; font-size: 11px;
+  }
+  .btn.mode.active   { background: #0e639c; }
+
+  #editor { position: absolute; top: 38px; left: 0; right: 0; bottom: 0; }
+  #hl, #ed {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    font-family: inherit; font-size: 13px; line-height: 1.45;
+    padding: 8px 12px; margin: 0; border: 0;
+    white-space: pre; word-wrap: normal; overflow: auto;
+    tab-size: 2; -moz-tab-size: 2;
+  }
+  #hl { pointer-events: none; color: #d4d4d4; z-index: 1; background: #1e1e1e; }
+  #ed {
+    background: transparent; color: transparent; caret-color: #ffffff;
+    resize: none; outline: none; z-index: 2;
+  }
+  #ed::selection { background: rgba(38, 79, 120, 0.7); color: transparent; }
+
+  /* token classes — five total, same names as the ABAP-generated page */
+  .kw  { color: #569cd6; font-weight: bold; }
+  .str { color: #ce9178; }
+  .num { color: #b5cea8; }
+  .cmt { color: #6a9955; font-style: italic; }
+  .fn  { color: #dcdcaa; }
+
+  /* "what ABAP would receive" panel — preview-only, not present in the real popup */
+  #panel {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+  }
+  #panel.show { display: flex; }
+  #panel .card {
+    width: min(720px, 90vw); max-height: 80vh; overflow: auto;
+    background: #252526; border: 1px solid #3e3e42;
+    border-radius: 4px; padding: 16px 20px;
+    color: #d4d4d4; font-size: 13px; line-height: 1.5;
+  }
+  #panel h3 { margin: 0 0 8px 0; color: #4ec9b0; font-size: 14px; }
+  #panel pre {
+    background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 3px;
+    padding: 10px 12px; margin: 8px 0 14px 0;
+    color: #d4d4d4; white-space: pre-wrap; word-wrap: break-word;
+    max-height: 40vh; overflow: auto;
+  }
+  #panel .row { display: flex; gap: 12px; align-items: center; margin-bottom: 4px; }
+  #panel .row label { color: #9cdcfe; min-width: 90px; }
+  #panel .row code  { color: #ce9178; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span id="title">SQL Editor</span>
+  <span id="badge">PREVIEW</span>
+  <span id="meta"></span>
+  <button class="btn mode" id="modeEdit"    onclick="setMode('edit')">Edit</button>
+  <button class="btn mode" id="modeDisplay" onclick="setMode('display')">Display</button>
+  <button class="btn cancel" onclick="cancelClick()">Cancel</button>
+  <button class="btn ok"     onclick="okClick()" id="okBtn">OK</button>
+</div>
+
+<div id="editor">
+  <pre id="hl"></pre>
+  <textarea id="ed" spellcheck="false" autocomplete="off"></textarea>
+</div>
+
+<div id="panel" onclick="closePanel(event)">
+  <div class="card" onclick="event.stopPropagation()">
+    <h3 id="panelTitle">ABAP would receive</h3>
+    <div class="row"><label>action:</label> <code id="panelAction"></code></div>
+    <div class="row"><label>confirmed:</label> <code id="panelConfirmed"></code></div>
+    <div class="row"><label>sql:</label></div>
+    <pre id="panelSql"></pre>
+    <div style="text-align: right;">
+      <button class="btn cancel" onclick="closePanel()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Same keyword list the ABAP build_keyword_list( ) emits -----------------
+  const KW_LIST = [
+    'SELECT','FROM','WHERE','GROUP','BY','HAVING','ORDER','ASC','DESC',
+    'LIMIT','OFFSET','TOP','UNION','INTERSECT','EXCEPT','ALL','DISTINCT',
+    'AS','ON','USING','JOIN','INNER','LEFT','RIGHT','OUTER','FULL','CROSS',
+    'LATERAL','NATURAL','AND','OR','NOT','IN','BETWEEN','LIKE','IS','NULL',
+    'EXISTS','ANY','SOME','CASE','WHEN','THEN','ELSE','END','IF','ELSIF',
+    'INSERT','INTO','VALUES','UPDATE','SET','DELETE','MERGE','UPSERT',
+    'RETURNING','TRUNCATE','WITH','RECURSIVE','CREATE','DROP','ALTER',
+    'TABLE','VIEW','INDEX','SEQUENCE','SCHEMA','USER','ROLE','FUNCTION',
+    'PROCEDURE','TRIGGER','SYNONYM','TYPE','ADD','COLUMN','RENAME','TO',
+    'REPLACE','PRIMARY','KEY','FOREIGN','REFERENCES','UNIQUE','CONSTRAINT',
+    'CHECK','DEFAULT','GENERATED','ALWAYS','IDENTITY','AUTOINCREMENT',
+    'BEGIN','COMMIT','ROLLBACK','SAVEPOINT','TRANSACTION','LOCK','UNLOCK',
+    'GRANT','REVOKE','PRIVILEGES','EXECUTE','CALL','DECLARE','CURSOR',
+    'OPEN','CLOSE','FETCH','LOOP','WHILE','FOR','EXIT','CONTINUE',
+    'RAISE','SIGNAL','EXCEPTION','HANDLER','CONTINUES','STOP',
+    'COLUMN','ROW','STORE','COLUMNAR','TENANT','TEMPORARY','GLOBAL','LOCAL',
+    'SESSION','CURRENT_USER','CURRENT_SCHEMA','CURRENT_DATE',
+    'CURRENT_TIME','CURRENT_TIMESTAMP','CURRENT_UTCTIMESTAMP','SYSDATE',
+    'SYSUUID','SYSTEM_TIME','OF','BEFORE','AFTER','EACH','STATEMENT',
+    'CONTAINS','FUZZY','SCORE','LANGUAGE','LINGUISTIC','EXACT','SIMILAR',
+    'SERIES_GENERATE','GENERATE','PERIOD','GAP','SPLIT','UNNEST','TABLESAMPLE',
+    'PARTITION','RANGE','HASH','ROUNDROBIN','OVER','WINDOW','PARTITIONED',
+    'BUCKETS','LOAD','UNLOAD','PARALLEL','SERIAL','CACHE','NOCACHE',
+    'INVALIDATE','REORG','MERGE','DELTA','TRUNCATE','ENABLE','DISABLE',
+    'FORCE','VALIDATE','EXPLAIN','PLAN','PLANVIZ','HINT'
+  ];
+  const KEYWORDS = {};
+  KW_LIST.forEach(k => KEYWORDS[k] = 1);
+
+  const FN_LIST = [
+    'COUNT','SUM','MIN','MAX','AVG','COALESCE','IFNULL','NULLIF',
+    'CAST','CONVERT','TO_CHAR','TO_DATE','TO_TIMESTAMP','TO_NUMBER','TO_DECIMAL',
+    'SUBSTR','SUBSTRING','LENGTH','LPAD','RPAD','TRIM','LTRIM','RTRIM','REPLACE',
+    'UPPER','LOWER','INSTR','CONCAT','ROUND','FLOOR','CEIL','MOD','ABS','POWER',
+    'ROW_NUMBER','RANK','DENSE_RANK','LAG','LEAD','NTILE','FIRST_VALUE','LAST_VALUE',
+    'DAYS_BETWEEN','SECONDS_BETWEEN','ADD_DAYS','ADD_MONTHS','ADD_YEARS',
+    'EXTRACT','YEAR','MONTH','DAY','HOUR','MINUTE','SECOND','LOCATE','GREATEST','LEAST'
+  ];
+  const FUNCTIONS = {};
+  FN_LIST.forEach(f => FUNCTIONS[f] = 1);
+
+  // ---- Tokeniser -------------------------------------------------------------
+  function isAlpha(c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c === '_'; }
+  function isAlnum(c) { return isAlpha(c) || (c >= '0' && c <= '9'); }
+  function isDigit(c) { return c >= '0' && c <= '9'; }
+  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function highlight(code) {
+    let out = '';
+    let i = 0;
+    const n = code.length;
+    while (i < n) {
+      const c = code.charAt(i);
+
+      if (c === '-' && code.charAt(i + 1) === '-') {
+        // -- line comment
+        let j = code.indexOf('\n', i);
+        if (j < 0) j = n;
+        out += '<span class="cmt">' + escHtml(code.substring(i, j)) + '</span>';
+        i = j;
+      } else if (c === '/' && code.charAt(i + 1) === '*') {
+        // /* block comment */
+        let j = code.indexOf('*/', i + 2);
+        if (j < 0) j = n; else j += 2;
+        out += '<span class="cmt">' + escHtml(code.substring(i, j)) + '</span>';
+        i = j;
+      } else if (c === "'" || c === '"') {
+        // 'string' or "quoted identifier"  (doubled quote = embedded quote)
+        const q = c;
+        let j = i + 1;
+        while (j < n) {
+          if (code.charAt(j) === q) {
+            if (code.charAt(j + 1) === q) { j += 2; continue; }
+            j++;
+            break;
+          }
+          j++;
+        }
+        out += '<span class="str">' + escHtml(code.substring(i, j)) + '</span>';
+        i = j;
+      } else if (isDigit(c)) {
+        // number
+        let j = i;
+        while (j < n) {
+          const cc = code.charAt(j);
+          if (isDigit(cc) || cc === '.') { j++; continue; }
+          break;
+        }
+        out += '<span class="num">' + escHtml(code.substring(i, j)) + '</span>';
+        i = j;
+      } else if (isAlpha(c)) {
+        // identifier / keyword / function-name-followed-by-paren
+        let j = i;
+        while (j < n && isAlnum(code.charAt(j))) j++;
+        const word = code.substring(i, j);
+        const upper = word.toUpperCase();
+        if (KEYWORDS[upper]) {
+          out += '<span class="kw">' + escHtml(word) + '</span>';
+        } else if (FUNCTIONS[upper] && code.charAt(j) === '(') {
+          out += '<span class="fn">' + escHtml(word) + '</span>';
+        } else {
+          out += escHtml(word);
+        }
+        i = j;
+      } else {
+        out += escHtml(c);
+        i++;
+      }
+    }
+    return out;
+  }
+
+  // ---- DOM glue --------------------------------------------------------------
+  const ed   = document.getElementById('ed');
+  const hl   = document.getElementById('hl');
+  const meta = document.getElementById('meta');
+
+  function syncHl() {
+    let code = ed.value;
+    if (code.length === 0 || code.charAt(code.length - 1) === '\n') code += ' ';
+    hl.innerHTML = highlight(code);
+    hl.scrollTop  = ed.scrollTop;
+    hl.scrollLeft = ed.scrollLeft;
+    const lines = ed.value.split('\n').length;
+    meta.innerHTML = ed.value.length + ' chars &middot; ' + lines + ' lines';
+  }
+
+  ed.addEventListener('input',  syncHl);
+  ed.addEventListener('scroll', syncHl);
+  ed.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = ed.selectionStart, t = ed.selectionEnd;
+      ed.value = ed.value.substring(0, s) + '  ' + ed.value.substring(t);
+      ed.selectionStart = ed.selectionEnd = s + 2;
+      syncHl();
+    } else if (e.ctrlKey && e.key === 'Enter') {
+      e.preventDefault();
+      okClick();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelClick();
+    }
+  });
+
+  // ---- Stubbed sapevent bridge: pop the "ABAP would receive" panel -----------
+  let originalSql = '';
+
+  function showPanel(action, confirmed, sql) {
+    document.getElementById('panelAction').textContent    = action;
+    document.getElementById('panelConfirmed').textContent = confirmed ? 'abap_true' : 'abap_false';
+    document.getElementById('panelSql').textContent       = sql;
+    document.getElementById('panel').classList.add('show');
+  }
+  function closePanel(e) {
+    if (e && e.target.id !== 'panel' && e.target.tagName !== 'BUTTON') return;
+    document.getElementById('panel').classList.remove('show');
+  }
+  function okClick()     { showPanel("sapevent:'ok'",     true,  ed.value); }
+  function cancelClick() { showPanel("sapevent:'cancel'", false, originalSql); }
+
+  // ---- Mode switching --------------------------------------------------------
+  function setMode(mode) {
+    const isDisplay = (mode === 'display');
+    ed.readOnly = isDisplay;
+    document.getElementById('okBtn').style.display = isDisplay ? 'none' : '';
+    document.getElementById('modeEdit').classList.toggle('active',    !isDisplay);
+    document.getElementById('modeDisplay').classList.toggle('active', isDisplay);
+    location.hash = mode;
+  }
+
+  // ---- Sample HANA SQL — exercises every token class -------------------------
+  const SAMPLE = [
+    "-- HANA SQL sample for testing the highlighter",
+    "WITH active_customers AS (",
+    "  SELECT customer_id, COUNT(*) AS order_count",
+    "    FROM sales_orders",
+    "   WHERE order_date >= ADD_MONTHS(CURRENT_DATE, -6)",
+    "     AND status NOT IN ('CANCELLED', 'REJECTED')",
+    "   GROUP BY customer_id",
+    "  HAVING COUNT(*) > 5",
+    ")",
+    "SELECT c.customer_id,",
+    "       c.customer_name,",
+    "       a.order_count,",
+    "       /* multi-line",
+    "          comment example */",
+    "       CASE",
+    "         WHEN a.order_count > 50 THEN 'Platinum'",
+    "         WHEN a.order_count > 20 THEN 'Gold'",
+    "         ELSE 'Silver'",
+    "       END AS tier",
+    "  FROM customers c",
+    "  INNER JOIN active_customers a ON c.customer_id = a.customer_id",
+    " WHERE c.region = 'EMEA'",
+    " ORDER BY a.order_count DESC",
+    " LIMIT 100;"
+  ].join('\n');
+
+  ed.value = originalSql = SAMPLE;
+  setMode(location.hash === '#display' ? 'display' : 'edit');
+  syncHl();
+  ed.focus();
+</script>
+</body>
+</html>
