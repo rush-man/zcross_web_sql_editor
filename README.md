@@ -3,6 +3,9 @@
 A small reusable utility that pops up a **web-style HANA SQL editor** inside
 the SAP GUI window — syntax-highlighted, dark theme, a single static API call.
 
+**GitHub:** https://github.com/rush-man/zcross_web_sql_editor — pull straight
+from there with abapGit (`ZABAPGIT` → New Online → paste URL).
+
 ```abap
 DATA(ls) = zcl_cross_web_sql_editor=>show(
              iv_sql   = lv_sql_in
