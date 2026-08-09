@@ -1,0 +1,6 @@
+adbutils>=2.8
+opencv-python-headless>=4.9
+numpy>=1.26
+pytesseract>=0.3.10
+PyYAML>=6.0
+Pillow>=10.0

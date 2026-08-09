@@ -1,0 +1,48 @@
+# Copy to config.yaml and edit. All times are seconds unless noted.
+
+device:
+  # ADB serial. Overridden by env var LASTWAR_DEVICE_SERIAL if set.
+  serial: "localhost:5555"
+  # Package/activity of the game (verify with: adb shell pm list packages | grep last)
+  package: "com.fun.lastwar.gp"
+
+vision:
+  # Template match confidence 0..1. Raise if the bot taps wrong things,
+  # lower if it fails to find buttons that are clearly on screen.
+  threshold: 0.86
+  # OCR language for pytesseract
+  ocr_lang: "eng"
+
+humanize:
+  # Random delay range inserted between actions, so the bot doesn't
+  # click with robotic 0ms timing.
+  action_delay: [0.4, 1.4]
+  # Random pixel jitter applied to every tap (radius, px)
+  tap_jitter: 4
+
+scheduler:
+  # Main loop tick
+  tick: 5
+  # If no screen is recognized for this long, restart the game app
+  lost_timeout: 120
+
+# Pause everything and just idle when this is true (e.g. flip it while you
+# play manually via scrcpy). The file is re-read every tick.
+paused: false
+
+tasks:
+  collect_base:
+    enabled: true
+    cooldown: 600
+  alliance_help:
+    enabled: true
+    cooldown: 300
+  train_troops:
+    enabled: true
+    cooldown: 1800
+  radar_tasks:
+    enabled: true
+    cooldown: 900
+  daily_free_gift:
+    enabled: true
+    cooldown: 21600

@@ -1,0 +1,5 @@
+config/config.yaml
+templates/*.png
+debug/
+__pycache__/
+*.pyc

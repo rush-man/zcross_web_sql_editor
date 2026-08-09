@@ -1,0 +1,31 @@
+services:
+  # Android 11 container running the game. Requires a Linux host with the
+  # binder kernel modules (most stock kernels >= 5.7; see redroid docs).
+  redroid:
+    image: redroid/redroid:11.0.0-latest
+    privileged: true
+    ports:
+      - "5555:5555"
+    volumes:
+      - redroid-data:/data
+    command:
+      - androidboot.redroid_width=720
+      - androidboot.redroid_height=1280
+      - androidboot.redroid_dpi=320
+      - androidboot.redroid_gpu_mode=guest
+    restart: unless-stopped
+
+  bot:
+    build: .
+    depends_on:
+      - redroid
+    environment:
+      - LASTWAR_DEVICE_SERIAL=redroid:5555
+    volumes:
+      - ./config:/app/config
+      - ./templates:/app/templates
+      - ./debug:/app/debug
+    restart: unless-stopped
+
+volumes:
+  redroid-data:
